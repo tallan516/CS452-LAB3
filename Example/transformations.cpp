@@ -12,7 +12,7 @@ glm::vec3 cubeTran;
 
 GLfloat size=10;
 
-GLfloat vertexarray[]={size,size,-size,
+/*GLfloat vertexarray[]={size,size,-size,
 		       	           size,-size,-size,
                        -size,-size,-size,
                        -size,size,-size,
@@ -20,14 +20,19 @@ GLfloat vertexarray[]={size,size,-size,
                        size,-size,size,
                        -size,-size,size,
                        -size,size,size
-                       };
+                       };*/
+
+GLfloat vertexarray[] = {	-10.0f,-10.0f,-10.0f,
+					10.0f,-10.0f,-10.0f,
+					0.0f,-10.0f,10.0f,
+					0.0f,10.0f,10.0f	};
 
 GLfloat colorarray[]={1.0f,1.0f,1.0f,1.0f,
 	              			0.5f,1.0f,1.0f,1.0f,
-		      						1.0f,0.5f,1.0f,1.0f,
+		      						/*1.0f,0.5f,1.0f,1.0f,
 		      						1.0f,1.0f,0.5f,1.0f,
 		      						1.0f,1.0f,1.0f,1.0f,
-		      						0.5f,1.0f,1.0f,1.0f,
+		      						0.5f,1.0f,1.0f,1.0f,*/
 		      						1.0f,0.5f,1.0f,1.0f,
                       1.0f,1.0f,0.5f,1.0f
 	              			};
