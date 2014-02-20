@@ -9,28 +9,35 @@ GLuint buffer[2];
 GLuint ebuffer;
 GLuint program;
 
-//GLfloat pit,yaw,scalar=1;
+GLfloat pit,yaw,scalar=1;
 glm::vec3 cubeTran;
 
-GLfloat vertices[] = {	-10.0f,-10.0f,-10.0f,
-				10.0f,-10.0f,-10.0f,
-				0.0f,-10.0f,10.0f,
-				0.0f,10.0f,10.0f	};
+GLfloat vertices[] = {	-5.0f,0.0f,-5.0f,
+				5.0f,0.0f,-5.0f,
+				5.0f,0.0f,5.0f,
+				-5.0f,0.0f,5.0f,
+				0.0f,10.0f,0.0f	};
 
 
 				//R, B, G, A (transparency)
-GLfloat colors[] = {	1.0f,0.0f,0.0f,1.0f,
-				0.0f,1.0f,0.0f,1.0f,
-				0.0f,0.0f,1.0f,1.0f,
-				1.0f,1.0f,1.0f,1.0f	}; 
+GLfloat colors[] = {	1.0f,0.0f,0.0f,1.0f,	//Red
+				1.0f,1.0f,0.0f,1.0f,	//Purple
+				0.0f,1.0f,0.0f,1.0f,	//Blue
+				0.0f,1.0f,1.0f,1.0f,	//Cyan
+				0.0f,0.0f,1.0f,1.0f	};	//Green 
 
-GLubyte elems[] = {	0,1,2,3,7,4,5,6,
-    	          		7,3,0,4,5,6,2,1,
-    		  		0,1,5,4,7,3,2,6	};
+GLubyte elems[] = {	4,3,0,
+    	          		4,2,3,
+    	          		4,1,2,
+    	          		4,0,1,
+    	          		0,1,2,
+    				2,3,0
+    	          		};
 
 //Declare functions
 void init();
 void display(SDL_Window* window);
+void input(SDL_Window* window);
 
 
 int main(int argc, char **argv)
@@ -55,12 +62,13 @@ int main(int argc, char **argv)
 	
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);		//Creates opengl context associated with the window
 	glewInit();		//Initializes glew
+	
 	init();	//Calls function to initialize the shaders and set up buffers
 	
 	//Keep looping through to make sure
 	while(true)
 	{
-		//input(window);		//Check keyboard input
+		input(window);		//Check keyboard input
 		display(window);		//Render
 	}
 	
@@ -74,19 +82,57 @@ int main(int argc, char **argv)
 
 void display(SDL_Window* window)
 {
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);		//Clears the frame buffer
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);	//Clears the frame buffer
 	
+	glm::mat4 trans;	//Matrix for transformations
 	
+	trans = glm::translate(trans, cubeTran);	//translate the cube
+	trans = glm::rotate(trans, pit, glm::vec3(1, 0, 0));	//rotate the cube around the x axis
+	trans = glm::rotate(trans, yaw, glm::vec3(0, 1, 0));	//rotate the cube arround the y axis
+	trans = glm::scale(trans, glm::vec3(scalar));	//scaling the cube
+    
+	GLint tempLoc = glGetUniformLocation(program, "modelMatrix");	//Matrix that handles the transformations
+	glUniformMatrix4fv(tempLoc, 1 ,GL_FALSE,&trans[0][0]);
 	
-	
-	glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_BYTE, NULL);
-	glFlush();					//Makes sure all data is rendered as soon as possible
-	SDL_GL_SwapWindow(window);		//Updates the window
+	glDrawElements(GL_TRIANGLES, 18, GL_UNSIGNED_BYTE, NULL);
+	glFlush();				//Makes sure all data is rendered as soon as possible
+	SDL_GL_SwapWindow(window);	//Updates the window
+}
+
+void input(SDL_Window* window)
+{
+	SDL_Event event;
+	while (SDL_PollEvent(&event))		//Handling the keyboard
+	{	
+		if(event.type == SDL_QUIT)
+		{
+			exit(0);
+		}
+		else if(event.type == SDL_KEYDOWN)
+		{
+			switch(event.key.keysym.sym)
+			{
+				case SDLK_ESCAPE: exit(0);
+				case SDLK_w: cubeTran.y+=2; break;
+				case SDLK_s: cubeTran.y-=2; break;
+				case SDLK_a: cubeTran.x-=2; break;
+				case SDLK_d: cubeTran.x+=2; break;
+				case SDLK_e: scalar+=.1f; break;
+				case SDLK_q: scalar-=.1f; break;
+				case SDLK_i: pit+=2; break;
+				case SDLK_k: pit-=2; break;
+				case SDLK_j: yaw+=2; break;
+				case SDLK_l: yaw-=2; break;
+			}
+		}
+	}
 }
 
 void init()
 {
-	initShaders();	//Calls the initialize shader function in the header file
+      glEnable(GL_DEPTH_TEST);
+	program = glCreateProgram();	//Creates program
+	initShaders(program);		//Calls the initialize shader function in the header file
 	
 	glGenVertexArrays(1, &abuffer);
 	glBindVertexArray(abuffer);
@@ -96,10 +142,12 @@ void init()
 	//Sets up pointers and stuff
 	glBindBuffer(GL_ARRAY_BUFFER, buffer[0]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 8, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	
 	glBindBuffer(GL_ARRAY_BUFFER, buffer[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
-	glVertexAttribPointer(1, 8, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	
 	glGenBuffers(1, &ebuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elems), elems, GL_STATIC_DRAW);

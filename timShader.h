@@ -21,7 +21,7 @@ void compileShader(GLuint shader);
 void attachShaders(GLuint shader1, GLuint shader2, GLuint program);
 const GLchar* inputShader(const char* filename);
 
-void initShaders()
+void initShaders(GLuint program)
 {
 	GLuint vshader = glCreateShader(GL_VERTEX_SHADER);		//Creates vertex shader
 	const GLchar* vshaderSource = inputShader("vertexshader.glsl");	//Gets the location of the shader file
@@ -33,10 +33,22 @@ void initShaders()
 	glShaderSource(fshader, 1, &fshaderSource, NULL);	//Links shader to file
 	compileShader(fshader);							//Calls function below to compile shader
 	
-	GLuint program = glCreateProgram();		//Creates program
-	
 	attachShaders(vshader, fshader, program);	//Calls function below to attach shaders
 	glUseProgram(program);		//Installs the program object to OpenGL's current rendering state
+	
+	glm::mat4 view;	//Matrix for the view of the camera
+  	view = glm::lookAt(
+	glm::vec3(0.0f, 0.0f, 50.0f),		//Camera position
+	glm::vec3(0.0f, 0.0f, 0.0f),		//Camera target
+	glm::vec3(0.0f, 1.0f, 0.0f) );	//Up-vector (0, 1, 0) is normal view, (0, -1, 0) is upside down
+	
+	GLint tempLoc = glGetUniformLocation(program, "viewMatrix");	//The view matrix handles the camera movement
+	glUniformMatrix4fv(tempLoc, 1, GL_FALSE, &view[0][0]);
+  
+	glm::mat4 mainProjMatrix;
+	mainProjMatrix = glm::perspective(57.0, 1.0, .1, 500.0);	//Matrix that handles the orthographic or perspective viewing
+	tempLoc = glGetUniformLocation(program, "Matrix");
+	glUniformMatrix4fv(tempLoc, 1, GL_FALSE, &mainProjMatrix[0][0]);
 }
 
 void compileShader(GLuint shader)
